@@ -102,10 +102,15 @@ void Game::CheckCollision()
 			++it;
 		}
 	}
-		}
 
 		// TODO #6 - If no bricks remain, pause ball and display victory text with R to reset
-
+	if (bricks.empty()) {
+		ball.moving = false;
+		Console::Clear();
+		int x = Console::WindowWidth() / 2 - 15;
+		int y = Console::WindowHeight() / 2;
+		Console::WordWrap(x, y, 30, "You win! Press 'R' to play again.");
+	}
 
 		if (paddle.Contains(ball.x_position + ball.x_velocity, ball.y_velocity + ball.y_position))
 		{
