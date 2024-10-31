@@ -118,5 +118,12 @@ void Game::CheckCollision()
 		}
 
 		// TODO #7 - If ball touches bottom of window, pause ball and display defeat text with R to reset
+		if (ball.y_position + ball.y_velocity >= Console::WindowHeight()) {
+			ball.moving = false;
+			Console::Clear();
+			int x = Console::WindowWidth() / 2 - 15;
+			int y = Console::WindowHeight() / 2;
+			Console::WordWrap(x, y, 30, "You lose. Press 'R' to play again.");
+		}
 	}
-}
+
