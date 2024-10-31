@@ -85,22 +85,23 @@ void Game::Render() const
 void Game::CheckCollision()
 {
 	// TODO #4 - Update collision to check all bricks
-	if (brick.Contains(ball.x_position + ball.x_velocity, ball.y_position + ball.y_velocity))
-	{
-		brick.color = ConsoleColor(brick.color - 1);
-		ball.y_velocity *= -1;
+	for (auto it = bricks.begin(); it != bricks.end();) {
+		if (it->Contains(ball.x_position + ball.x_velocity, ball.y_position + ball.y_velocity)) {
+			it->color = ConsoleColor(it->color - 1);  // Change color on hit
+			ball.y_velocity *= -1;  // Reverse the ball's direction
 
-		// TODO #5 - If the ball hits the same brick 3 times (color == black), remove it from the vector
+			// TODO #5 - If the ball hits the same brick 3 times (color == black), remove it from the vector
 
+		}
+
+		// TODO #6 - If no bricks remain, pause ball and display victory text with R to reset
+
+
+		if (paddle.Contains(ball.x_position + ball.x_velocity, ball.y_velocity + ball.y_position))
+		{
+			ball.y_velocity *= -1;
+		}
+
+		// TODO #7 - If ball touches bottom of window, pause ball and display defeat text with R to reset
 	}
-
-	// TODO #6 - If no bricks remain, pause ball and display victory text with R to reset
-
-
-	if (paddle.Contains(ball.x_position + ball.x_velocity, ball.y_velocity + ball.y_position))
-	{
-		ball.y_velocity *= -1;
-	}
-
-	// TODO #7 - If ball touches bottom of window, pause ball and display defeat text with R to reset
 }
