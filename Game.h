@@ -5,6 +5,7 @@
 
 class Game
 {
+	enum GameState { Running, Won, Lost } state = Running;// created a gamestate variable.
 	Ball ball;
 	Box paddle;
 

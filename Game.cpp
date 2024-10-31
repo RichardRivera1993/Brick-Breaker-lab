@@ -49,6 +49,14 @@ bool Game::Update()
 	if (GetAsyncKeyState(VK_ESCAPE) & 0x1)
 		return false;
 
+	if (state != Running) { // Added a method to stop updating game logic when not running.
+		if (GetAsyncKeyState('R') & 0x1) {
+			Reset();
+			state = Running;
+		}
+		return true;
+	}
+
 	if (GetAsyncKeyState(VK_RIGHT) && paddle.x_position < WINDOW_WIDTH - paddle.width)
 		paddle.x_position += 2;
 
@@ -69,15 +77,28 @@ bool Game::Update()
 //  All rendering should be done between the locks in this function
 void Game::Render() const
 {
+	static GameState lastState = GameState::Running; // This tracks the last state to detect changes
 	Console::Lock(true);
 	Console::Clear();
 	
-	paddle.Draw();
-	ball.Draw();
+	if (state == Running) {
+		paddle.Draw();
+		ball.Draw();
 
-	// TODO #3 - Update render to render all bricks
-	for (const Box& brick : bricks) {
-		brick.Draw();
+		// TODO #3 - Update render to render all bricks
+		for (const Box& brick : bricks) {
+			brick.Draw();
+		}
+	}
+	else if (state == Won) {
+		int x = Console::WindowWidth() / 2 - 15;
+		int y = Console::WindowHeight() / 2;
+		Console::WordWrap(x, y, 30, "You win! Press 'R' to play again.");
+	}
+	else if (state == Lost) {
+		int x = Console::WindowWidth() / 2 - 15;
+		int y = Console::WindowHeight() / 2;
+		Console::WordWrap(x, y, 30, "You lose. Press 'R' to play again.");
 	}
 	Console::Lock(false);
 }
@@ -87,24 +108,31 @@ void Game::CheckCollision()
 	// TODO #4 - Update collision to check all bricks
 	for (auto it = bricks.begin(); it != bricks.end();) {
 		if (it->Contains(ball.x_position + ball.x_velocity, ball.y_position + ball.y_velocity)) {
-			it->color = ConsoleColor(it->color - 1);  // Change color on hit
-			ball.y_velocity *= -1;  // Reverse the ball's direction
+			it->hitCount++; // This increments the hit count.
+			ball.y_velocity *= -1;  // This reverses the ball's direction.
 
 			// TODO #5 - If the ball hits the same brick 3 times (color == black), remove it from the vector
-			if (it->color == ConsoleColor::Black) {
-				it = bricks.erase(it);  // Remove brick and move to the next
+			switch (it->hitCount) {
+			case 1:
+				it->color = ConsoleColor::DarkYellow;  // First hit color
+				break;
+			case 2:
+				it->color = ConsoleColor::DarkRed;  // Second hit color
+				break;
+			case 3:
+				it = bricks.erase(it);  // Remove the brick if hit 3 times
+				continue;  // Skip the increment step since the iterator is now at the next element
 			}
-			else {
-				++it;  // Only increment if not erased
-			}
+			++it;  // Move to the next brick if not removed
 		}
 		else {
-			++it;
+			++it;  // Move to the next brick if no collision occurred
 		}
 	}
 
 		// TODO #6 - If no bricks remain, pause ball and display victory text with R to reset
 	if (bricks.empty()) {
+		state = GameState::Won; // This changes the game state to won.
 		ball.moving = false;
 		Console::Clear();
 		int x = Console::WindowWidth() / 2 - 15;
@@ -119,6 +147,7 @@ void Game::CheckCollision()
 
 		// TODO #7 - If ball touches bottom of window, pause ball and display defeat text with R to reset
 		if (ball.y_position + ball.y_velocity >= Console::WindowHeight()) {
+			state = GameState::Lost; // This changes the game state to lost.
 			ball.moving = false;
 			Console::Clear();
 			int x = Console::WindowWidth() / 2 - 15;
